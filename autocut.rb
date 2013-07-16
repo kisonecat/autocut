@@ -4,9 +4,6 @@ require 'wavefile'
 include WaveFile 
 require 'xml'
 
-FLIP_FILTER="hqdn3d,vflip,hflip,scale=1280:720,setsar=1:1"
-NOFLIP_FILTER="hqdn3d,scale=1280:720,setsar=1:1"
-
 SAMPLES_PER_BUFFER = 2048
 
 def find_audio_cut_points(wave_filename)
@@ -18,7 +15,8 @@ def find_audio_cut_points(wave_filename)
   first_loud_moment = nil
   last_loud_moment = nil
 
-  frequency_window = 50..150   # this is where my voice is landing
+  # Depending on the fundamental frequency of your voice, you may want to change this
+  frequency_window = 50..150   
   anti_frequency_window = 850..900
   maximum = nil
 
@@ -84,49 +82,9 @@ end
 def find_video_cut_points(movie_filename)
   filename1 = Tempfile.new(['movie-audio-one','.wav'])
   filename2 = Tempfile.new(['movie-audio-two','.wav'])
-  system( "~/bin/ffmpeg -y -i #{movie_filename} -vn -ac 1 -ar 44100 -f wav #{filename1.path} 2>/dev/null" )
-  system( "~/bin/sox #{filename1.path} #{filename2.path}" )
+  system( "ffmpeg -y -i #{movie_filename} -vn -ac 1 -ar 44100 -f wav #{filename1.path} 2>/dev/null" )
+  system( "sox #{filename1.path} #{filename2.path}" )
   return find_audio_cut_points(filename2.path)
-end
-
-def cut_movie_appropriately(input_filename, output_filename)
-  cut_points = find_video_cut_points(input_filename)
-  cut_points[0] = cut_points[0] - 0.20
-  cut_points[1] = cut_points[1] + 0.35
-
-#  system( "~/bin/ffmpeg -y -i #{input_filename} -ss #{'%.2f' % cut_points[0]} -t #{'%.2f' % (cut_points[1] - cut_points[0])} -acodec copy -vcodec copy #{output_filename} 2>/dev/null" )
-  system( "~/bin/ffmpeg -y -i #{input_filename} -ss #{'%.2f' % cut_points[0]} -t #{'%.2f' % (cut_points[1] - cut_points[0])} -vcodec libx264 -pix_fmt yuv420p -vprofile high -preset medium -tune film -crf 22 -coder 1 -me_method umh -x264opts rc_lookahead=30 -x264opts b-pyramid=strict -trellis 1 -threads 0 -acodec libfaac -ac 1 -ab 128k #{output_filename} 2>/dev/null" )
-end
-
-def concatenate_movies( movie_list, output_filename )
-  command = "~/bin/ffmpeg -y "
-  for movie in movie_list
-    command = command + " -i #{movie} "
-#    if cuts.keys.include?( movie )
-#      command = command + " -ss #{'%.2f' % cuts[movie][0]} -t #{'%.2f' % (cuts[movie][1] - cuts[movie][0])} "
-#    end
-  end
-  command = command + " -i /home/fowler.291/autocut/music.wav "
-
-  command = command + "-filter_complex '"
-
-  for i in 0...movie_list.length
-    filter = NOFLIP_FILTER
-    if movie_list[i].match(/flip/)
-      filter = FLIP_FILTER
-    end
-    command = command + "[#{i}:0] #{filter} [v#{i}] ; "
-  end
-
-  for i in 0...movie_list.length
-    command = command + "[v#{i}] "
-    command = command + "[#{i}:1] "
-  end
-  command = command + "concat=n=#{movie_list.length}:v=1:a=1 [video] [voice] ; [#{movie_list.length}] [voice] amix=inputs=2:duration=longest [a] ; [video] setsar=1:1 [v]' -map '[v]' -map '[a]' "
-  command = command + " -vcodec libx264 -pix_fmt yuv420p -vprofile high -preset medium -tune film -crf 22 -coder 1 -me_method umh -x264opts rc_lookahead=30 -x264opts b-pyramid=strict -trellis 1 -threads 0 -acodec libfaac -ac 1 -ab 128k "
-  command = command + " #{output_filename}"
-  puts command
-  system( command )
 end
 
 movie_list = []
