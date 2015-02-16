@@ -26,7 +26,7 @@ def find_audio_cut_points(wave_filename)
   last_loud_moment = nil
 
   # Depending on the fundamental frequency of your voice, you may want to change this
-  frequency_window = 50..150
+  frequency_window = 100..300
 
   # my chair tended to squeak in this range
   anti_frequency_window = 850..900
@@ -73,8 +73,8 @@ def find_audio_cut_points(wave_filename)
 
     seconds = (index).to_f / info.sample_rate
     index = index + SAMPLES_PER_BUFFER
-    next if seconds < 1.0
-    next if seconds > (duration_in_seconds - 1.5)
+    next if seconds < 0.3
+    #next if seconds > (duration_in_seconds - 1.5)
 
     if total > 0.2 * maximum      
       if first_loud_moment.nil? or seconds < first_loud_moment
