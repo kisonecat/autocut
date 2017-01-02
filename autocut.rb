@@ -17,10 +17,12 @@ require 'xml'
 SAMPLES_PER_BUFFER = 2048
 
 def find_audio_cut_points(wave_filename)
-  info = Reader.info(wave_filename)
+  reader = Reader.new(wave_filename)
+  info = reader.native_format()
   maximum_amplitude = 2**(info.bits_per_sample - 1)
-
-  duration_in_seconds = info.duration.hours * 3600 + info.duration.minutes * 60 + info.duration.seconds + info.duration.milliseconds/1000.0
+  
+  duration = reader.total_duration
+  duration_in_seconds = duration.hours * 3600 + duration.minutes * 60 + duration.seconds + duration.milliseconds/1000.0
 
   first_loud_moment = nil
   last_loud_moment = nil
