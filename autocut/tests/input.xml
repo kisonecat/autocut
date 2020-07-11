@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<movie author="Sample Person" title="Sample Title">
+  <video src="title.mp4" audio="intro.wav" in="0" out="6" />
+  <video src="outro.avi" in="0" out="8.3333"/>
+</movie>
