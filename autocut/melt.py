@@ -20,6 +20,7 @@ def movie2xml(movie):
 
     # add producers for video tracks    
     for video in videos:
+        # producer for video
         producer = ET.SubElement(root, 'producer')
         source_id =  str(video['id']) + '-source' 
         
@@ -28,14 +29,107 @@ def movie2xml(movie):
         prop.set('name', 'resource')
         prop.text = video['src']
 
-        tractor = ET.SubElement(root, 'tractor')
-        tractor.set('id', str(video['id']) )
+        if 'slide' in video:
+          # producer for slide
+          producer = ET.SubElement(root, 'producer')
+          slide_id =  str(video['id']) + '-slide' 
+        
+          producer.set('id', slide_id )
+          prop = ET.SubElement(producer, 'property')
+          prop.set('name', 'resource')
+          prop.text = video['slide']
 
-        multitrack = ET.SubElement(tractor, 'multitrack')
-        track =  ET.SubElement(multitrack, 'track')
-        track.set('producer', source_id )
+          
+          # producer for CROPPED video
+          tractor = ET.SubElement(root, 'tractor')
+          cropped_id =  str(video['id']) + '-cropped' 
+          tractor.set('id', cropped_id )
 
-        if 'flip' in video:
+          multitrack = ET.SubElement(tractor, 'multitrack')
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', source_id )
+
+          f = ET.SubElement(tractor, 'filter')
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'track')
+          prop.text = '0'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_service')
+          prop.text = 'crop'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'left')
+          prop.text = '420'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'right')
+          prop.text = '420'          
+
+          f = ET.SubElement(tractor, 'filter')
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'track')
+          prop.text = '0'
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_service')
+          prop.text = 'affine'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'transition.rect')
+          prop.text = '1613/773:307x307'
+
+
+
+
+
+          
+
+          # the output
+          tractor = ET.SubElement(root, 'tractor')
+          tractor.set('id', str(video['id']) )
+
+          multitrack = ET.SubElement(tractor, 'multitrack')
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', cropped_id )
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', slide_id )
+
+             
+          f = ET.SubElement(tractor, 'transition')
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'a_track')
+          prop.text = '1'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'b_track')
+          prop.text = '0'          
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_type')
+          prop.text = 'transition'            
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_service')
+          prop.text = 'frei0r.cairoblend'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', '1')
+          prop.text = 'add'
+
+        else:
+        
+          tractor = ET.SubElement(root, 'tractor')
+          tractor.set('id', str(video['id']) )
+
+          multitrack = ET.SubElement(tractor, 'multitrack')
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', source_id )
+
+          if 'flip' in video:
             f = ET.SubElement(tractor, 'filter')
             
             prop = ET.SubElement(f, 'property')
