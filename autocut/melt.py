@@ -29,15 +29,15 @@ def movie2xml(movie):
         prop.set('name', 'resource')
         prop.text = video['src']
 
-        if 'slide' in video:
-          # producer for slide
+        if 'overlay' in video:
+          # producer for overlay
           producer = ET.SubElement(root, 'producer')
-          slide_id =  str(video['id']) + '-slide' 
+          overlay_id =  str(video['id']) + '-overlay'
         
-          producer.set('id', slide_id )
+          producer.set('id', overlay_id )
           prop = ET.SubElement(producer, 'property')
           prop.set('name', 'resource')
-          prop.text = video['slide']
+          prop.text = video['overlay']
 
           
           # producer for CROPPED video
@@ -95,7 +95,7 @@ def movie2xml(movie):
           track =  ET.SubElement(multitrack, 'track')
           track.set('producer', cropped_id )
           track =  ET.SubElement(multitrack, 'track')
-          track.set('producer', slide_id )
+          track.set('producer', overlay_id )
 
              
           f = ET.SubElement(tractor, 'transition')
