@@ -28,8 +28,16 @@ def movie2xml(movie):
     for video in videos:
         # producer for video
         producer = ET.SubElement(root, 'producer')
-        source_id =  str(video['id']) + '-source' 
-        
+        source_id =  str(video['id']) + '-source'
+
+        (fps, width, height) = read_fps_geom(video['src'])
+        if (width >= height):
+          width_crop = int((width - height)/2)
+          height_crop = 0
+        else:
+          height_crop = int((width - height)/2)
+          width_crop = 0
+
         producer.set('id', source_id )
         prop = ET.SubElement(producer, 'property')
         prop.set('name', 'resource')
@@ -107,11 +115,19 @@ def movie2xml(movie):
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'left')
-          prop.text = '420'
+          prop.text = '{:d}'.format(width_crop)
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'right')
-          prop.text = '420'          
+          prop.text = '{:d}'.format(width_crop)
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'top')
+          prop.text = '{:d}'.format(height_crop)
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'bottom')
+          prop.text = '{:d}'.format(height_crop)
 
           f = ET.SubElement(tractor, 'filter')
             
