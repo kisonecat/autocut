@@ -11,6 +11,10 @@ def listen_for_start_and_end(video,before_in=0.25,after_out=0.30):
     sr=48000
     audio, _ = librosa.load(video,sr=sr)
 
+    # remove the first and last pieces to avoid button click sounds
+    quiet_zone = math.floor(sr / 5)
+    audio = audio[quiet_zone:-quiet_zone]
+    
     hop_length = 1024
     audio_mfcc = librosa.feature.melspectrogram(y=audio, sr=sr, hop_length=hop_length)
 
@@ -45,5 +49,5 @@ def listen_for_start_and_end(video,before_in=0.25,after_out=0.30):
     if ending > float(len(audio)) / sr:
         ending = float(len(audio)) / sr
     
-    return starting, ending
+    return starting + (float(quiet_zone)/sr), ending + (float(quiet_zone)/sr)
 

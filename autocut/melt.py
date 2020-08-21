@@ -29,7 +29,48 @@ def movie2xml(movie):
         prop.set('name', 'resource')
         prop.text = video['src']
 
-        if 'slide' in video:
+        if 'overlay' in video:
+          # producer for slide
+          producer = ET.SubElement(root, 'producer')
+          slide_id =  str(video['id']) + '-slide' 
+        
+          producer.set('id', slide_id )
+          prop = ET.SubElement(producer, 'property')
+          prop.set('name', 'resource')
+          prop.text = video['overlay']
+
+          # the output
+          tractor = ET.SubElement(root, 'tractor')
+          tractor.set('id', str(video['id']) )
+
+          multitrack = ET.SubElement(tractor, 'multitrack')
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', source_id )
+          track =  ET.SubElement(multitrack, 'track')
+          track.set('producer', slide_id )
+             
+          f = ET.SubElement(tractor, 'transition')
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'a_track')
+          prop.text = '1'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'b_track')
+          prop.text = '0'          
+            
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_type')
+          prop.text = 'transition'            
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'mlt_service')
+          prop.text = 'frei0r.cairoblend'
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', '1')
+          prop.text = 'add'
+        elif 'slide' in video:
           # producer for slide
           producer = ET.SubElement(root, 'producer')
           slide_id =  str(video['id']) + '-slide' 
@@ -81,11 +122,6 @@ def movie2xml(movie):
           prop.set('name', 'transition.rect')
           prop.text = '1613/773:307x307'
 
-
-
-
-
-          
 
           # the output
           tractor = ET.SubElement(root, 'tractor')
