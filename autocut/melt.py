@@ -6,12 +6,18 @@ import subprocess
 import math
 
 def read_fps(video):
+  (fps, _w, _h) = read_fps_geom (video)
+  return fps
+
+def read_fps_geom(video):
   melted = subprocess.run(["melt", video, "-consumer", "xml"], capture_output=True)
   root = ET.fromstring(melted.stdout)
   frame_rate_num = root.find('profile').get('frame_rate_num')
   frame_rate_den = root.find('profile').get('frame_rate_den')
   fps = float(frame_rate_num) / float(frame_rate_den)
-  return fps
+  width = float(root.find('profile').get('width'))
+  height = float(root.find('profile').get('height'))
+  return (fps,width,height)
 
 def movie2xml(movie):
     videos = movie['videos']
