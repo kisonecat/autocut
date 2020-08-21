@@ -6,7 +6,6 @@ import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 class TestParse(unittest.TestCase):
-    @unittest.expectedFailure
     def test_overlay(self):
         movie = parse_input(os.path.join(dir_path,'input-overlay.xml'))
         xml = movie2xml(movie)
