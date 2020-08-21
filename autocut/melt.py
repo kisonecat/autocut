@@ -34,9 +34,15 @@ def movie2xml(movie):
         if (width >= height):
           width_crop = int((width - height)/2)
           height_crop = 0
+          video_size = int(height/2)
         else:
           height_crop = int((width - height)/2)
           width_crop = 0
+          video_size = int(width/2)
+
+        # TODO: get image size from overlay file
+        inset_x = 1920 - video_size
+        inset_y = 1080 - video_size
 
         producer.set('id', source_id )
         prop = ET.SubElement(producer, 'property')
@@ -141,7 +147,7 @@ def movie2xml(movie):
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'transition.rect')
-          prop.text = '1613/773:307x307'
+          prop.text = '{x:d}/{y:d}:{size:d}x{size:d}'.format(x=inset_x, y=inset_y, size=video_size)
 
 
           # the output
