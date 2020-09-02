@@ -19,6 +19,13 @@ def read_fps_geom(video):
   height = float(root.find('profile').get('height'))
   return (fps,width,height)
 
+def read_image_size(image):
+  melted = subprocess.run(["melt", image, "-consumer", "xml"], capture_output=True)
+  root = ET.fromstring(melted.stdout)
+  width = float(root.find("producer/property[@name='meta.media.width']").text)
+  height = float(root.find("producer/property[@name='meta.media.height']").text)
+  return (width,height)
+
 def movie2xml(movie):
     videos = movie['videos']
 
@@ -39,10 +46,6 @@ def movie2xml(movie):
           height_crop = int((width - height)/2)
           width_crop = 0
           video_size = int(width/2)
-
-        # TODO: get image size from overlay file
-        inset_x = 1920 - video_size
-        inset_y = 1080 - video_size
 
         producer.set('id', source_id )
         prop = ET.SubElement(producer, 'property')
@@ -99,6 +102,10 @@ def movie2xml(movie):
           prop = ET.SubElement(producer, 'property')
           prop.set('name', 'resource')
           prop.text = video['overlay']
+
+          (im_width, im_height) = read_image_size(prop.text)
+          inset_x = int(im_width - video_size)
+          inset_y = int(im_height - video_size)
 
           # producer for CROPPED video
           tractor = ET.SubElement(root, 'tractor')
