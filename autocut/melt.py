@@ -6,12 +6,25 @@ import subprocess
 import math
 
 def read_fps(video):
+  (fps, _w, _h) = read_fps_geom (video)
+  return fps
+
+def read_fps_geom(video):
   melted = subprocess.run(["melt", video, "-consumer", "xml"], capture_output=True)
   root = ET.fromstring(melted.stdout)
   frame_rate_num = root.find('profile').get('frame_rate_num')
   frame_rate_den = root.find('profile').get('frame_rate_den')
   fps = float(frame_rate_num) / float(frame_rate_den)
-  return fps
+  width = float(root.find('profile').get('width'))
+  height = float(root.find('profile').get('height'))
+  return (fps,width,height)
+
+def read_image_size(image):
+  melted = subprocess.run(["melt", image, "-consumer", "xml"], capture_output=True)
+  root = ET.fromstring(melted.stdout)
+  width = float(root.find("producer/property[@name='meta.media.width']").text)
+  height = float(root.find("producer/property[@name='meta.media.height']").text)
+  return (width,height)
 
 def movie2xml(movie):
     videos = movie['videos']
@@ -22,22 +35,32 @@ def movie2xml(movie):
     for video in videos:
         # producer for video
         producer = ET.SubElement(root, 'producer')
-        source_id =  str(video['id']) + '-source' 
-        
+        source_id =  str(video['id']) + '-source'
+
+        (fps, width, height) = read_fps_geom(video['src'])
+        if (width >= height):
+          width_crop = int((width - height)/2)
+          height_crop = 0
+          video_size = int(height/2)
+        else:
+          height_crop = int((width - height)/2)
+          width_crop = 0
+          video_size = int(width/2)
+
         producer.set('id', source_id )
         prop = ET.SubElement(producer, 'property')
         prop.set('name', 'resource')
         prop.text = video['src']
 
-        if 'overlay' in video:
-          # producer for overlay
+        if 'slide' in video:
+          # producer for slide
           producer = ET.SubElement(root, 'producer')
-          overlay_id =  str(video['id']) + '-overlay'
+          slide_id =  str(video['id']) + '-slide' 
         
-          producer.set('id', overlay_id )
+          producer.set('id', slide_id )
           prop = ET.SubElement(producer, 'property')
           prop.set('name', 'resource')
-          prop.text = video['overlay']
+          prop.text = video['slide']
 
           # the output
           tractor = ET.SubElement(root, 'tractor')
@@ -80,6 +103,10 @@ def movie2xml(movie):
           prop.set('name', 'resource')
           prop.text = video['overlay']
 
+          (im_width, im_height) = read_image_size(prop.text)
+          inset_x = int(im_width - video_size)
+          inset_y = int(im_height - video_size)
+
           # producer for CROPPED video
           tractor = ET.SubElement(root, 'tractor')
           cropped_id =  str(video['id']) + '-cropped' 
@@ -101,11 +128,19 @@ def movie2xml(movie):
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'left')
-          prop.text = '420'
+          prop.text = '{:d}'.format(width_crop)
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'right')
-          prop.text = '420'          
+          prop.text = '{:d}'.format(width_crop)
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'top')
+          prop.text = '{:d}'.format(height_crop)
+
+          prop = ET.SubElement(f, 'property')
+          prop.set('name', 'bottom')
+          prop.text = '{:d}'.format(height_crop)
 
           f = ET.SubElement(tractor, 'filter')
             
@@ -119,7 +154,7 @@ def movie2xml(movie):
 
           prop = ET.SubElement(f, 'property')
           prop.set('name', 'transition.rect')
-          prop.text = '1613/773:307x307'
+          prop.text = '{x:d}/{y:d}:{size:d}x{size:d}'.format(x=inset_x, y=inset_y, size=video_size)
 
 
           # the output
@@ -130,7 +165,7 @@ def movie2xml(movie):
           track =  ET.SubElement(multitrack, 'track')
           track.set('producer', cropped_id )
           track =  ET.SubElement(multitrack, 'track')
-          track.set('producer', overlay_id )
+          track.set('producer', slide_id )
 
              
           f = ET.SubElement(tractor, 'transition')
